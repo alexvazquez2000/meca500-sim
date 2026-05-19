@@ -2,7 +2,9 @@ package com.alex.meca500;
 
 import javafx.application.Application;
 import javafx.scene.*;
+import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -45,12 +47,14 @@ public class MainApp extends Application {
         
         
         PerspectiveCamera cam = new PerspectiveCamera(true);
-        cam.setTranslateZ(-500);
+        cam.setNearClip(0.1);
+        cam.setFarClip(10000);
+        cam.setTranslateZ(-1000);
 
         SubScene subScene = new SubScene(world, 800, 600, true, SceneAntialiasing.BALANCED);
         subScene.setCamera(cam);
 
-        VBox sliders = new VBox();
+        VBox sliders = new VBox(6);
 
         for (int i = 0; i < 6; i++) {
             int idx = i;
@@ -58,7 +62,8 @@ public class MainApp extends Application {
             s.valueProperty().addListener((obs, oldVal, newVal) -> {
                 robot.setJoint(idx, newVal.doubleValue());
             });
-            sliders.getChildren().add(s);
+            Label label = new Label("Joint " + (i + 1));
+            sliders.getChildren().add(new HBox(8, label, s));
         }
 
         VBox root = new VBox(subScene, sliders);
