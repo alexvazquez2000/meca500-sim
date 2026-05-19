@@ -21,11 +21,15 @@
             <artifactId>javafx-graphics</artifactId>
             <version>${javafx.version}</version>
         </dependency>
-        <dependency><!--STLMeshImporter -->
-            <groupId>org.fxyz3d</groupId>
-            <artifactId>fxyz3d</artifactId>
-            <version>0.5.4</version>
-        </dependency>
+
+<!-- Source: https://mvnrepository.com/artifact/us.ihmc/jimStlMeshImporterJFX -->
+<dependency>
+    <groupId>us.ihmc</groupId>
+    <artifactId>jimStlMeshImporterJFX</artifactId>
+    <version>0.7</version>
+    <scope>compile</scope>
+</dependency>
+
     </dependencies>
  
  <build>

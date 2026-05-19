@@ -1,8 +1,9 @@
 package com.alex.meca500;
 
 import javafx.scene.shape.MeshView;
-import org.fxyz3d.importers.stl.StlMeshImporter;
-
+import com.interactivemesh.jfx.importer.stl.StlMeshImporter;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.PhongMaterial;
 import java.net.URL;
 
 public class STLLoader {
@@ -22,6 +23,12 @@ public class STLLoader {
 
         importer.close();
 
+        //Add material (otherwise it looks black)
+        PhongMaterial mat = new PhongMaterial();
+        mat.setDiffuseColor(Color.LIGHTGRAY);
+        
+        mesh.setMaterial(mat);
+        
         return mesh;
     }
 }
