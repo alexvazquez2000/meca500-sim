@@ -11,14 +11,17 @@ public class Meca500 {
     private Group root = new Group();
 
     public Meca500(RobotPart[] parts) {
-        for (int i = 0; i < 6; i++) {
-            joints[i] = parts[i];
-        }
+        root.getChildren().add(parts[0].getNode()); // base
 
-        // Simple hierarchy (refine later)
-        root.getChildren().add(parts[0].getNode());
-        for (int i = 1; i < 6; i++) {
-            parts[i-1].getNode().getChildren().add(parts[i].getNode());
+        parts[0].getNode().getChildren().add(parts[1].getNode());
+        parts[1].getNode().getChildren().add(parts[2].getNode());
+        parts[2].getNode().getChildren().add(parts[3].getNode());
+        parts[3].getNode().getChildren().add(parts[4].getNode());
+        parts[4].getNode().getChildren().add(parts[5].getNode());
+        parts[5].getNode().getChildren().add(parts[6].getNode());
+
+        for (int i = 0; i < 6; i++) {
+            joints[i] = parts[i + 1];
         }
     }
 
