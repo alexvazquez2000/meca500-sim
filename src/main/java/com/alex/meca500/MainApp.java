@@ -18,16 +18,32 @@ public class MainApp extends Application {
 
         Group world = new Group();
 
-        // TODO: load STL meshes here
-        RobotPart[] parts = new RobotPart[6];
+        //load STL meshes here
+        RobotPart[] parts = new RobotPart[7];
 
-        for (int i = 0; i < 6; i++) {
-          //  parts[i] = new RobotPart(new javafx.scene.shape.Box(50,50,50)); // placeholder
-        }
+        parts[0] = new RobotPart(STLLoader.load("/link0_base.stl"));
+        parts[1] = new RobotPart(STLLoader.load("/link1.stl"));
+        parts[2] = new RobotPart(STLLoader.load("/link2.stl"));
+        parts[3] = new RobotPart(STLLoader.load("/link3.stl"));
+        parts[4] = new RobotPart(STLLoader.load("/link4.stl"));
+        parts[5] = new RobotPart(STLLoader.load("/link5.stl"));
+        parts[6] = new RobotPart(STLLoader.load("/link6_flange.stl"));
 
         Meca500 robot = new Meca500(parts);
         world.getChildren().add(robot.getNode());
 
+        //Add light
+        PointLight light = new PointLight();
+        light.setTranslateX(500);
+        light.setTranslateY(-500);
+        light.setTranslateZ(-500);
+
+        world.getChildren().add(light);
+
+        AmbientLight ambient = new AmbientLight();
+        world.getChildren().add(ambient);
+        
+        
         PerspectiveCamera cam = new PerspectiveCamera(true);
         cam.setTranslateZ(-500);
 
