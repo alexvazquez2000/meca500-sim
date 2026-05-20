@@ -6,6 +6,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.MeshView;
+import javafx.scene.shape.TriangleMesh;
 import javafx.stage.Stage;
 
 /**
@@ -30,6 +32,9 @@ public class MainApp extends Application {
         parts[4] = new RobotPart(STLLoader.load("/link4.stl"));
         parts[5] = new RobotPart(STLLoader.load("/link5.stl"));
         parts[6] = new RobotPart(STLLoader.load("/link6_flange.stl"));
+
+        String[] names = {"link0_base","link1","link2","link3","link4","link5","link6_flange"};
+        for (int i = 0; i < parts.length; i++) printBounds(names[i], parts[i].getMesh());
 
         Meca500 robot = new Meca500(parts);
         world.getChildren().add(robot.getNode());
@@ -73,6 +78,20 @@ public class MainApp extends Application {
         stage.setTitle("Meca500 Simulator");
         stage.setScene(scene);
         stage.show();
+    }
+
+    private static void printBounds(String name, MeshView meshView) {
+        TriangleMesh mesh = (TriangleMesh) meshView.getMesh();
+        float[] pts = mesh.getPoints().toArray(null);
+        float minX = Float.MAX_VALUE, minY = Float.MAX_VALUE, minZ = Float.MAX_VALUE;
+        float maxX = -Float.MAX_VALUE, maxY = -Float.MAX_VALUE, maxZ = -Float.MAX_VALUE;
+        for (int i = 0; i < pts.length; i += 3) {
+            minX = Math.min(minX, pts[i]);   maxX = Math.max(maxX, pts[i]);
+            minY = Math.min(minY, pts[i+1]); maxY = Math.max(maxY, pts[i+1]);
+            minZ = Math.min(minZ, pts[i+2]); maxZ = Math.max(maxZ, pts[i+2]);
+        }
+        System.out.printf("%-20s  X[%7.1f, %7.1f]  Y[%7.1f, %7.1f]  Z[%7.1f, %7.1f]%n",
+                name, minX, maxX, minY, maxY, minZ, maxZ);
     }
 
     public static void main(String[] args) {

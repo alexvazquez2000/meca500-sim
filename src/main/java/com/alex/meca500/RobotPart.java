@@ -1,5 +1,6 @@
 package com.alex.meca500;
 
+import javafx.geometry.Point3D;
 import javafx.scene.Group;
 import javafx.scene.shape.MeshView;
 import javafx.scene.transform.Rotate;
@@ -13,11 +14,19 @@ public class RobotPart {
     private Rotate rotation;
 
     public RobotPart(MeshView mesh) {
+        this(mesh, Rotate.Z_AXIS, 0, 0, 0);
+    }
+
+    public RobotPart(MeshView mesh, Point3D axis, double pivotX, double pivotY, double pivotZ) {
         this.mesh = mesh;
         this.node = new Group(mesh);
 
-        rotation = new Rotate(0, Rotate.Z_AXIS);
+        rotation = new Rotate(0, pivotX, pivotY, pivotZ, axis);
         node.getTransforms().add(rotation);
+    }
+
+    public MeshView getMesh() {
+        return mesh;
     }
 
     public Group getNode() {
