@@ -23,11 +23,20 @@ public class STLLoader {
 
         importer.close();
 
-        //Add material (otherwise it looks black)
-        PhongMaterial mat = new PhongMaterial();
-        mat.setDiffuseColor(Color.LIGHTGRAY);
+        // Create PhongMaterial for aluminum (otherwise it looks black)
+        PhongMaterial aluminumMaterial = new PhongMaterial();
+
+        // Diffuse color: base silver/gray color of the aluminum
+        //aluminumMaterial.setDiffuseColor(Color.web("#d1d5db"));
+        aluminumMaterial.setDiffuseColor(Color.web("#71757b"));
+
+        // Specular color: bright highlight (aluminum is a conductor and reflects light as its own color)
+        aluminumMaterial.setSpecularColor(Color.web("#e5e7eb")); 
+
+        // Specular power: high value yields a sharp, polished look (try lower values for a matte/brushed finish)
+        aluminumMaterial.setSpecularPower(64);
         
-        mesh.setMaterial(mat);
+        mesh.setMaterial(aluminumMaterial);
         
         return mesh;
     }
