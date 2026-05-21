@@ -4,15 +4,35 @@ package com.alex.meca500.kinematics;
  * Numerical inverse kinematics via damped least squares (Levenberg-Marquardt).
  *
  * Works for any robot described by DH parameters.
- * The 6D error vector is [dx, dy, dz (mm), dAlpha, dBeta, dGamma (rad)].
+ *
+ * Unit scaling: the Jacobian's linear rows (mm/rad) and angular rows (1/rad)
+ * have very different magnitudes, making the raw DLS poorly conditioned.
+ * We scale orientation error and Jacobian rows by ORI_SCALE (mm/rad) so all
+ * components are in consistent mm units before solving.
+ *
+ * For interactive slider control the solver intentionally runs only a few
+ * iterations per call, producing small smooth joint updates rather than
+ * jumping to a potentially far-away solution in one shot.
  */
 public final class IKSolver {
 
-    private static final double LAMBDA    = 0.05;  // damping factor
-    private static final int    MAX_ITER  = 50;
+    // Treats 1 rad of orientation error as equivalent to this many mm of position error.
+    // Scales orientation Jacobian rows so J*Jt is in uniform mm² units.
+    private static final double ORI_SCALE = 100.0; // mm/rad
+
+    // Damping in mm units (after ORI_SCALE is applied). A value of ~10 mm
+    // adds modest regularisation without over-damping near singularities.
+    private static final double LAMBDA    = 10.0;
+
+    // Deliberately few iterations per slider event: keeps joint movement small
+    // and predictable, preventing configuration jumps when dragging.
+    private static final int    MAX_ITER  = 5;
+
+    // Maximum joint change per iteration (~1.1°). Total max per call: 5 × 0.02 ≈ 5.7°.
+    private static final double MAX_STEP  = 0.02;  // rad
+
     private static final double POS_TOL   = 0.1;   // mm
-    private static final double ORI_TOL   = 0.001; // rad (~0.057 deg)
-    private static final double MAX_STEP  = 0.1;   // rad per joint per iteration
+    private static final double ORI_TOL   = 0.001; // rad
 
     private IKSolver() {}
 
@@ -37,22 +57,29 @@ public final class IKSolver {
             TcpPose cur = DHKinematics.computeTcpPose(params, q);
             double[] curArr = cur.toArray();
 
-            // 6D pose error
+            // 6D pose error — orientation components scaled to mm units
             double[] e = new double[6];
             e[0] = tgt[0] - curArr[0];
             e[1] = tgt[1] - curArr[1];
             e[2] = tgt[2] - curArr[2];
-            e[3] = wrapAngle(tgt[3] - curArr[3]);
-            e[4] = wrapAngle(tgt[4] - curArr[4]);
-            e[5] = wrapAngle(tgt[5] - curArr[5]);
+            e[3] = wrapAngle(tgt[3] - curArr[3]) * ORI_SCALE;
+            e[4] = wrapAngle(tgt[4] - curArr[4]) * ORI_SCALE;
+            e[5] = wrapAngle(tgt[5] - curArr[5]) * ORI_SCALE;
 
             double posErr = norm3(e[0], e[1], e[2]);
             double oriErr = norm3(e[3], e[4], e[5]);
-            if (posErr < POS_TOL && oriErr < ORI_TOL) break;
+            if (posErr < POS_TOL && oriErr < ORI_TOL * ORI_SCALE) break;
 
             double[][] J = DHKinematics.jacobian(params, q);
 
-            // A = J * Jt + lambda^2 * I_6
+            // Scale orientation rows of J to match ORI_SCALE applied to e
+            for (int k = 0; k < n; k++) {
+                J[3][k] *= ORI_SCALE;
+                J[4][k] *= ORI_SCALE;
+                J[5][k] *= ORI_SCALE;
+            }
+
+            // A = J * Jt + lambda^2 * I_6  (all terms now in mm^2)
             double[][] A = new double[6][6];
             for (int r = 0; r < 6; r++) {
                 for (int c = 0; c < 6; c++) {
@@ -63,15 +90,13 @@ public final class IKSolver {
                 A[r][r] += LAMBDA * LAMBDA;
             }
 
-            // y = (J * Jt + lambda^2 * I)^-1 * e
-            double[] y = Transform4x4.solveLU(A, e);
-
-            // dq = Jt * y
+            // y = A^-1 * e,  then  dq = Jt * y
+            double[] y  = Transform4x4.solveLU(A, e);
             double[] dq = new double[n];
             for (int i = 0; i < n; i++) {
                 for (int r = 0; r < 6; r++) dq[i] += J[r][i] * y[r];
                 dq[i] = clamp(dq[i], -MAX_STEP, MAX_STEP);
-                q[i] = clamp(q[i] + dq[i], jointMin[i], jointMax[i]);
+                q[i]  = clamp(q[i] + dq[i], jointMin[i], jointMax[i]);
             }
         }
         return q;
