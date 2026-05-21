@@ -151,12 +151,13 @@ public class MainApp {
 		// ------------------------------------------------------------------ //
 
 		private static final String[] TCP_LABELS = {"X (mm)", "Y (mm)", "Z (mm)", "Alpha °", "Beta °", "Gamma °"};
-		private static final double[] TCP_MIN    = {-300, -300,  -50, -180,  -90, -180};
+		private static final double[] TCP_MIN    = {-300, -300, -600, -180,  -90, -180};
 		private static final double[] TCP_MAX    = { 300,  300,  600,  180,   90,  180};
 		private static final double[] TCP_TICK   = {  50,   50,   50,   30,   30,   30};
 
 		private VBox buildTcpColumn() {
 			VBox col = new VBox(4);
+			//TCP Pose refers to the exact position (translation) and orientation (rotation) of a robot's Tool Center Point in 3D space
 			col.getChildren().add(new Label("TCP Pose"));
 			for (int i = 0; i < 6; i++) {
 				int idx = i;
