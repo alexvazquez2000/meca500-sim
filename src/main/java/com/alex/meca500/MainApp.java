@@ -87,8 +87,13 @@ public class MainApp {
 			subScene.heightProperty().bind(subSceneWrapper.heightProperty());
 			VBox.setVgrow(subSceneWrapper, Priority.ALWAYS);
 
-			VBox jointPanel = buildJointPanel();
-			VBox tcpPanel   = buildTcpPanel();
+			VBox jointCol = buildJointColumn();
+			VBox tcpCol    = buildTcpColumn();
+
+			HBox.setHgrow(jointCol, Priority.ALWAYS);
+			HBox.setHgrow(tcpCol,    Priority.ALWAYS);
+
+			HBox bottomPanel = new HBox(8, jointCol, tcpCol);
 
 			// Initialise TCP fields from FK at zero angles (guard prevents spurious IK calls)
 			updatingFromCode = true;
@@ -96,8 +101,8 @@ public class MainApp {
 			applyTcpPoseToSliders(initPose);
 			updatingFromCode = false;
 
-			VBox root = new VBox(subSceneWrapper, jointPanel, tcpPanel);
-			Scene scene = new Scene(root, 800, 950);
+			VBox root = new VBox(subSceneWrapper, bottomPanel);
+			Scene scene = new Scene(root, 900, 800);
 
 			stage.setTitle("Meca500 Simulator");
 			stage.setScene(scene);
@@ -105,11 +110,11 @@ public class MainApp {
 		}
 
 		// ------------------------------------------------------------------ //
-		//  Joint panel (6 rows)                                               //
+		//  Joint column                                                      //
 		// ------------------------------------------------------------------ //
-
-		private VBox buildJointPanel() {
-			VBox panel = new VBox(4);
+		private VBox buildJointColumn() {
+			VBox col = new VBox(4);
+			col.getChildren().add(new Label("Joints"));
 			for (int i = 0; i < 6; i++) {
 				int idx = i;
 
@@ -134,13 +139,15 @@ public class MainApp {
 
 				tf.setOnAction(e -> setSliderFromField(tf, s));
 
-				panel.getChildren().add(new HBox(8, new Label("Joint " + (i + 1)), s, tf));
+				HBox row = new HBox(8, new Label("Joint " + (idx + 1)), s, tf);
+				HBox.setHgrow(s, Priority.ALWAYS);
+				col.getChildren().add(row);
 			}
-			return panel;
+			return col;
 		}
 
 		// ------------------------------------------------------------------ //
-		//  TCP panel (X, Y, Z, Alpha, Beta, Gamma)                            //
+		//  TCP column (X, Y, Z, Alpha, Beta, Gamma)                           //
 		// ------------------------------------------------------------------ //
 
 		private static final String[] TCP_LABELS = {"X (mm)", "Y (mm)", "Z (mm)", "Alpha °", "Beta °", "Gamma °"};
@@ -148,8 +155,9 @@ public class MainApp {
 		private static final double[] TCP_MAX    = { 300,  300,  600,  180,   90,  180};
 		private static final double[] TCP_TICK   = {  50,   50,   50,   30,   30,   30};
 
-		private VBox buildTcpPanel() {
-			VBox panel = new VBox(4);
+		private VBox buildTcpColumn() {
+			VBox col = new VBox(4);
+			col.getChildren().add(new Label("TCP Pose"));
 			for (int i = 0; i < 6; i++) {
 				int idx = i;
 
@@ -185,9 +193,11 @@ public class MainApp {
 
 				tf.setOnAction(e -> setSliderFromField(tf, s));
 
-				panel.getChildren().add(new HBox(8, new Label(TCP_LABELS[idx]), s, tf));
+				HBox row = new HBox(8, new Label(TCP_LABELS[idx]), s, tf);
+				HBox.setHgrow(s, Priority.ALWAYS);
+				col.getChildren().add(row);
 			}
-			return panel;
+			return col;
 		}
 
 		// ------------------------------------------------------------------ //
