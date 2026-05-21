@@ -1,6 +1,9 @@
 package com.alex.meca500;
 
+import javafx.scene.control.TextField;
+
 import javafx.application.Application;
+import javafx.geometry.Pos;
 import javafx.scene.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
@@ -67,16 +70,45 @@ public class MainApp {
 			SubScene subScene = new SubScene(world, 800, 600, true, SceneAntialiasing.BALANCED);
 			subScene.setCamera(cam);
 
-			VBox sliders = new VBox(6);
+			VBox sliders = new VBox(4);
 
 			for (int i = 0; i < 6; i++) {
 				int idx = i;
 				Slider s = new Slider(-180, 180, 0);
-				s.valueProperty().addListener((obs, oldVal, newVal) -> {
-					robot.setJoint(idx, newVal.doubleValue());
+				s.setShowTickMarks(true);
+				s.setShowTickLabels(true);
+				s.setMajorTickUnit(30);
+				s.setMinorTickCount(5);
+				s.setSnapToTicks(true);
+				TextField textField = new TextField();
+				textField.setPrefWidth(60);
+				textField.setAlignment(Pos.CENTER);
+
+				s.valueProperty().addListener((observable, oldValue, newValue) -> {
+					robot.setJoint(idx, newValue.doubleValue());
+					//Synchronize Slider -> TextField
+					// Format the value to keep it readable without too many decimals
+					textField.setText(String.format("%.0f", newValue));
 				});
+
+				//Synchronize TextField -> Slider
+				textField.setOnAction(event -> {
+					try {
+						double val = Double.parseDouble(textField.getText());
+						if (val >= s.getMin() && val <= s.getMax()) {
+							s.setValue(val);
+						} else {
+							// Reset to the current slider value if out of bounds
+							textField.setText(String.format("%.0f", s.getValue()));
+						}
+					} catch (NumberFormatException e) {
+						// Revert to valid text if user types letters
+						textField.setText(String.format("%.0f", s.getValue()));
+					}
+				});
+
 				Label label = new Label("Joint " + (i + 1));
-				sliders.getChildren().add(new HBox(8, label, s));
+				sliders.getChildren().add(new HBox(8, label, s, textField));
 			}
 
 			VBox root = new VBox(subScene, sliders);
