@@ -1,29 +1,43 @@
 package com.alex.meca500;
 
+import com.alex.meca500.kinematics.DHParameter;
+import com.alex.meca500.kinematics.KinematicsModel;
+
 import javafx.geometry.Point3D;
 import javafx.scene.Group;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
+
 /**
- * Meca500 6-DOF robot arm.
+ * Meca500 6-DOF robot arm — visual model and kinematics model.
  *
  * STLs are exported from the assembly STEP in world coordinates (Y-up, mm).
- * A Rotate(180, X) on the world Group in MainApp converts to JavaFX Y-down.
+ * A Rotate(180, Y) on the world Group in MainApp converts to JavaFX Y-down.
  * Pivot coordinates below are in the STEP assembly world frame.
  *
- * Joint axes (in STEP/local frame):
- *   J1 (base swivel)  – Y axis
- *   J2 (shoulder)     – X axis
- *   J3 (elbow)        – X axis
- *   J4 (forearm roll) – Y axis
- *   J5 (wrist pitch)  – X axis
- *   J6 (flange spin)  – Y axis
+ * DH kinematics are expressed in the robot's mathematical frame (Z-up).
  *
  * @author Alex Vazquez <vazqueza2000@gmail.com>
  */
-public class Meca500 {
+public class Meca500 implements KinematicsModel {
+
+    // Meca500 R3 standard DH parameters: a (mm), alpha (rad), d (mm), theta_offset (rad)
+    private static final DHParameter[] DH_PARAMS = {
+        new DHParameter(  0,  Math.PI / 2,  135, 0),
+        new DHParameter(210,           0,    0, 0),
+        new DHParameter( 75,  Math.PI / 2,   0, 0),
+        new DHParameter(  0, -Math.PI / 2,  210, 0),
+        new DHParameter(  0,  Math.PI / 2,   0, 0),
+        new DHParameter(  0,           0,   60, 0)
+    };
+
+    private static final double LIM = Math.toRadians(175);
+    private static final double[] JOINT_MIN = { -LIM, -LIM, -LIM, -LIM, -LIM, -LIM };
+    private static final double[] JOINT_MAX = {  LIM,  LIM,  LIM,  LIM,  LIM,  LIM };
+
+    private final double[] currentAngles = new double[6]; // radians
 
     // Set to true to show colored spheres at each joint pivot for debugging
     public static final boolean SHOW_PIVOTS = true;
@@ -90,7 +104,28 @@ public class Meca500 {
         return root;
     }
 
+    /** Sets joint i (0-based) in degrees and updates the visual model. */
     public void setJoint(int i, double angle) {
         joints[i].setRotation(angle);
     }
+
+    // --- KinematicsModel ---
+
+    @Override
+    public DHParameter[] getDHParameters() { return DH_PARAMS; }
+
+    @Override
+    public double[] getJointAngles() { return currentAngles.clone(); }
+
+    @Override
+    public void setJointAngle(int i, double angleRad) {
+        currentAngles[i] = angleRad;
+        setJoint(i, Math.toDegrees(angleRad));
+    }
+
+    @Override
+    public double[] getJointMin() { return JOINT_MIN; }
+
+    @Override
+    public double[] getJointMax() { return JOINT_MAX; }
 }
