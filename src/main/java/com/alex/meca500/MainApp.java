@@ -8,6 +8,8 @@ import javafx.scene.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.MeshView;
 import javafx.scene.shape.TriangleMesh;
@@ -70,6 +72,11 @@ public class MainApp {
 			SubScene subScene = new SubScene(world, 800, 600, true, SceneAntialiasing.BALANCED);
 			subScene.setCamera(cam);
 
+			Pane subSceneWrapper = new Pane(subScene);
+			subScene.widthProperty().bind(subSceneWrapper.widthProperty());
+			subScene.heightProperty().bind(subSceneWrapper.heightProperty());
+			VBox.setVgrow(subSceneWrapper, Priority.ALWAYS);
+
 			VBox sliders = new VBox(4);
 
 			for (int i = 0; i < 6; i++) {
@@ -111,7 +118,7 @@ public class MainApp {
 				sliders.getChildren().add(new HBox(8, label, s, textField));
 			}
 
-			VBox root = new VBox(subScene, sliders);
+			VBox root = new VBox(subSceneWrapper, sliders);
 
 			Scene scene = new Scene(root, 800, 800);
 
