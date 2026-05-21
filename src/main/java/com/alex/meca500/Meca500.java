@@ -44,12 +44,12 @@ public class Meca500 {
         // For X-axis joints: only pivotY and pivotZ matter (pivotX is free).
         // All values are rough estimates from bounding-box analysis — tune with debug spheres.
 
-        configureJoint(parts[1], Rotate.Y_AXIS,  15.54f,    0,       0);      // J1 base swivel
-        configureJoint(parts[2], Rotate.X_AXIS,   0,       17.0f,    0);      // J2 shoulder
-        configureJoint(parts[3], Rotate.X_AXIS,   0,      152.0f,    0);      // J3 elbow
-        configureJoint(parts[4], Rotate.Y_AXIS,  15.54f,    0,     -61.0f);   // J4 forearm roll
+        configureJoint(parts[1], Rotate.Y_AXIS, 15.54f, -4.62f, 0);      // J1 base swivel
+        configureJoint(parts[2], Rotate.X_AXIS, 53.04f, 69.38f,    0);      // J2 shoulder
+        configureJoint(parts[3], Rotate.X_AXIS,   53.54f, 184.38f,    0);      // J3 elbow
+        configureJoint(parts[4], Rotate.X_AXIS,  15.54f, 222.38f,  54.0f);   // J4 forearm roll
         configureJoint(parts[5], Rotate.X_AXIS,   0,      222.0f,  -94.0f);   // J5 wrist pitch
-        configureJoint(parts[6], Rotate.Y_AXIS,  15.54f,    0,    -184.6f);   // J6 flange spin
+        configureJoint(parts[6], Rotate.Z_AXIS,  15.54f,    0,    -184.6f);   // J6 flange spin
         
         // Build parent-child hierarchy
         root.getChildren().add(parts[0].getNode());
