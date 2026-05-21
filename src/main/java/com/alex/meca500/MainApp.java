@@ -8,6 +8,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.MeshView;
 import javafx.scene.shape.TriangleMesh;
+import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 
 /**
@@ -21,12 +22,14 @@ public class MainApp {
 		Application.launch(MainFxApp.class, args);
 	}
 
-	static class MainFxApp extends Application {
+	public static class MainFxApp extends Application {
 
 		@Override
 		public void start(Stage stage) {
 
 			Group world = new Group();
+			// STLs are in STEP assembly frame (Y-up). Flip to JavaFX Y-down.
+			world.getTransforms().add(new Rotate(180, Rotate.X_AXIS));
 
 			//load STL meshes here
 			RobotPart[] parts = new RobotPart[7];

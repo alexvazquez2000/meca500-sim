@@ -39,7 +39,7 @@
             <artifactId>javafx-maven-plugin</artifactId>
             <version>0.0.8</version>
             <configuration>
-                <mainClass>com.alex.meca500.Launcher</mainClass>
+                <mainClass>com.alex.meca500.MainApp</mainClass>
                 <options>
                     <option>--enable-native-access=ALL-UNNAMED</option>
                     <option>--sun-misc-unsafe-memory-access=allow</option>
