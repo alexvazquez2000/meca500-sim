@@ -15,86 +15,95 @@ import javafx.stage.Stage;
  * 
  * @author Alex Vazquez <vazqueza2000@gmail.com>
  */
-public class MainApp extends Application {
+public class MainApp {
 
-    @Override
-    public void start(Stage stage) {
+	public static void main(String[] args) {
+		Application.launch(MainFxApp.class, args);
+	}
 
-        Group world = new Group();
+	static class MainFxApp extends Application {
 
-        //load STL meshes here
-        RobotPart[] parts = new RobotPart[7];
+		@Override
+		public void start(Stage stage) {
 
-        parts[0] = new RobotPart(STLLoader.load("/link0_base.stl"));
-        parts[1] = new RobotPart(STLLoader.load("/link1.stl"));
-        parts[2] = new RobotPart(STLLoader.load("/link2.stl"));
-        parts[3] = new RobotPart(STLLoader.load("/link3.stl"));
-        parts[4] = new RobotPart(STLLoader.load("/link4.stl"));
-        parts[5] = new RobotPart(STLLoader.load("/link5.stl"));
-        parts[6] = new RobotPart(STLLoader.load("/link6_flange.stl"));
+			Group world = new Group();
 
-        String[] names = {"link0_base","link1","link2","link3","link4","link5","link6_flange"};
-        for (int i = 0; i < parts.length; i++) printBounds(names[i], parts[i].getMesh());
+			//load STL meshes here
+			RobotPart[] parts = new RobotPart[7];
+			parts[0] = new RobotPart(STLLoader.load("/Link0_base.stl"));
+			parts[1] = new RobotPart(STLLoader.load("/Link1.stl"));
+			parts[2] = new RobotPart(STLLoader.load("/Link2.stl"));
+			parts[3] = new RobotPart(STLLoader.load("/Link3.stl"));
+			parts[4] = new RobotPart(STLLoader.load("/Link4.stl"));
+			parts[5] = new RobotPart(STLLoader.load("/Link5.stl"));
+			parts[6] = new RobotPart(STLLoader.load("/Link6_flange.stl"));
 
-        Meca500 robot = new Meca500(parts);
-        world.getChildren().add(robot.getNode());
+			String[] names = {"link0_base","link1","link2","link3","link4","link5","link6_flange"};
+			for (int i = 0; i < parts.length; i++) printBounds(names[i], parts[i].getMesh());
 
-        //Add light
-        PointLight light = new PointLight();
-        light.setTranslateX(500);
-        light.setTranslateY(-500);
-        light.setTranslateZ(-500);
+			Meca500 robot = new Meca500(parts);
+			world.getChildren().add(robot.getNode());
 
-        world.getChildren().add(light);
+			//Add light
+			PointLight light = new PointLight();
+			light.setTranslateX(500);
+			light.setTranslateY(-500);
+			light.setTranslateZ(-500);
 
-        AmbientLight ambient = new AmbientLight();
-        world.getChildren().add(ambient);
-        
-        
-        PerspectiveCamera cam = new PerspectiveCamera(true);
-        cam.setNearClip(0.1);
-        cam.setFarClip(10000);
-        cam.setTranslateZ(-1000);
+			world.getChildren().add(light);
 
-        SubScene subScene = new SubScene(world, 800, 600, true, SceneAntialiasing.BALANCED);
-        subScene.setCamera(cam);
+			AmbientLight ambient = new AmbientLight();
+			world.getChildren().add(ambient);
 
-        VBox sliders = new VBox(6);
 
-        for (int i = 0; i < 6; i++) {
-            int idx = i;
-            Slider s = new Slider(-180, 180, 0);
-            s.valueProperty().addListener((obs, oldVal, newVal) -> {
-                robot.setJoint(idx, newVal.doubleValue());
-            });
-            Label label = new Label("Joint " + (i + 1));
-            sliders.getChildren().add(new HBox(8, label, s));
-        }
+			PerspectiveCamera cam = new PerspectiveCamera(true);
+			cam.setNearClip(0.1);
+			cam.setFarClip(10000);
+			cam.setTranslateZ(-1000);
 
-        VBox root = new VBox(subScene, sliders);
+			SubScene subScene = new SubScene(world, 800, 600, true, SceneAntialiasing.BALANCED);
+			subScene.setCamera(cam);
 
-        Scene scene = new Scene(root, 800, 800);
+			VBox sliders = new VBox(6);
 
-        stage.setTitle("Meca500 Simulator");
-        stage.setScene(scene);
-        stage.show();
-    }
+			for (int i = 0; i < 6; i++) {
+				int idx = i;
+				Slider s = new Slider(-180, 180, 0);
+				s.valueProperty().addListener((obs, oldVal, newVal) -> {
+					robot.setJoint(idx, newVal.doubleValue());
+				});
+				Label label = new Label("Joint " + (i + 1));
+				sliders.getChildren().add(new HBox(8, label, s));
+			}
 
-    private static void printBounds(String name, MeshView meshView) {
-        TriangleMesh mesh = (TriangleMesh) meshView.getMesh();
-        float[] pts = mesh.getPoints().toArray(null);
-        float minX = Float.MAX_VALUE, minY = Float.MAX_VALUE, minZ = Float.MAX_VALUE;
-        float maxX = -Float.MAX_VALUE, maxY = -Float.MAX_VALUE, maxZ = -Float.MAX_VALUE;
-        for (int i = 0; i < pts.length; i += 3) {
-            minX = Math.min(minX, pts[i]);   maxX = Math.max(maxX, pts[i]);
-            minY = Math.min(minY, pts[i+1]); maxY = Math.max(maxY, pts[i+1]);
-            minZ = Math.min(minZ, pts[i+2]); maxZ = Math.max(maxZ, pts[i+2]);
-        }
-        System.out.printf("%-20s  X[%7.1f, %7.1f]  Y[%7.1f, %7.1f]  Z[%7.1f, %7.1f]%n",
-                name, minX, maxX, minY, maxY, minZ, maxZ);
-    }
+			VBox root = new VBox(subScene, sliders);
 
-    public static void main(String[] args) {
-        launch();
-    }
+			Scene scene = new Scene(root, 800, 800);
+
+			stage.setTitle("Meca500 Simulator");
+			stage.setScene(scene);
+			stage.show();
+		}
+
+		private static void printBounds(String name, MeshView meshView) {
+			TriangleMesh mesh = (TriangleMesh) meshView.getMesh();
+			float[] pts = mesh.getPoints().toArray(null);
+			float minX = Float.MAX_VALUE;
+			float minY = Float.MAX_VALUE;
+			float minZ = Float.MAX_VALUE;
+			float maxX = -Float.MAX_VALUE;
+			float maxY = -Float.MAX_VALUE;
+			float maxZ = -Float.MAX_VALUE;
+			for (int i = 0; i < pts.length; i += 3) {
+				minX = Math.min(minX, pts[i]);   maxX = Math.max(maxX, pts[i]);
+				minY = Math.min(minY, pts[i+1]); maxY = Math.max(maxY, pts[i+1]);
+				minZ = Math.min(minZ, pts[i+2]); maxZ = Math.max(maxZ, pts[i+2]);
+			}
+			System.out.printf("%-20s  X[%7.1f, %7.1f]  Y[%7.1f, %7.1f]  Z[%7.1f, %7.1f]%n",
+					name, minX, maxX, minY, maxY, minZ, maxZ);
+		}
+
+	}
+
 }
+
