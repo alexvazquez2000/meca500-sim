@@ -29,7 +29,7 @@ public class MainApp {
 
 			Group world = new Group();
 			// STLs are in STEP assembly frame (Y-up). Flip to JavaFX Y-down.
-			world.getTransforms().add(new Rotate(180, Rotate.X_AXIS));
+			world.getTransforms().add(new Rotate(180, Rotate.Y_AXIS));
 
 			//load STL meshes here
 			RobotPart[] parts = new RobotPart[7];
@@ -51,7 +51,7 @@ public class MainApp {
 			PointLight light = new PointLight();
 			light.setTranslateX(500);
 			light.setTranslateY(-500);
-			light.setTranslateZ(-500);
+			light.setTranslateZ(500);
 
 			world.getChildren().add(light);
 
