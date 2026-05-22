@@ -58,12 +58,12 @@ public class Meca500 implements KinematicsModel {
         // For X-axis joints: only pivotY and pivotZ matter (pivotX is free).
         // All values are rough estimates from bounding-box analysis — tune with debug spheres.
 
-        configureJoint(parts[1], Rotate.Y_AXIS, 15.54f, -4.62f, 0);      // J1 base swivel
-        configureJoint(parts[2], Rotate.X_AXIS, 0, -49.38f,   0);      // J2 shoulder
-        configureJoint(parts[3], Rotate.X_AXIS, 53.54f, -184.38f,    0);      // J3 elbow
-        configureJoint(parts[4], Rotate.Z_AXIS, 15.54f, -222.38f,  54.0f);   // J4 forearm roll
-        configureJoint(parts[5], Rotate.X_AXIS,     0,  -222.38f,  119.0f);   // J5 wrist pitch
-        configureJoint(parts[6], Rotate.Z_AXIS,  15.54f, -222.38f,    184.6f);   // J6 flange spin
+        configureJoint(parts[1], Rotate.Y_AXIS, 15.54f,  -4.37f, 0);      // J1 base swivel
+        configureJoint(parts[2], Rotate.X_AXIS, 15.54f,   -49.38f,   0);      // J2 shoulder (x=(48.04 -16.96)/2 = 15.54
+        configureJoint(parts[3], Rotate.X_AXIS, 15.54f, -184.38f,    0);      // J3 elbow (x=(47.54 - 16.46)/2=
+        configureJoint(parts[4], Rotate.Z_AXIS, 15.54f, -222.38f,  (61.0f + 62.5f)/2.0f );   // J4 forearm roll
+        configureJoint(parts[5], Rotate.X_AXIS, 15.54f, -222.38f,  119.0f);   // J5 wrist pitch
+        configureJoint(parts[6], Rotate.Z_AXIS, 15.54f, -222.38f,    184.6f);   // J6 flange spin (the join is at 179.0 but End is 184)
         
         // Build parent-child hierarchy
         root.getChildren().add(parts[0].getNode());
