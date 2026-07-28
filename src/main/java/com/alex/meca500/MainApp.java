@@ -106,7 +106,9 @@ public class MainApp {
 			Scene scene = new Scene(root, 900, 800);
 
 			stage.setTitle("Meca500 Simulator");
-			stage.getIcons().add(new Image(getClass().getResourceAsStream("/meca500.ico")));
+			for (String iconRes : new String[] {"/meca500-16.png", "/meca500-32.png", "/meca500-48.png", "/meca500-128.png", "/meca500-256.png"}) {
+				stage.getIcons().add(new Image(getClass().getResourceAsStream(iconRes)));
+			}
 			stage.setScene(scene);
 			stage.show();
 		}
