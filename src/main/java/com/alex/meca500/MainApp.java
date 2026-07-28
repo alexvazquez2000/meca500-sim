@@ -10,6 +10,7 @@ import javafx.scene.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -105,6 +106,7 @@ public class MainApp {
 			Scene scene = new Scene(root, 900, 800);
 
 			stage.setTitle("Meca500 Simulator");
+			stage.getIcons().add(new Image(getClass().getResourceAsStream("/meca500.ico")));
 			stage.setScene(scene);
 			stage.show();
 		}
