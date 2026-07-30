@@ -7,6 +7,8 @@ package com.alex.meca500.kinematics;
  *   alpha = rotation about Z (yaw)
  *   beta  = rotation about Y (pitch)
  *   gamma = rotation about X (roll)
+ *
+ * @author Alex Vazquez <vazqueza2000@gmail.com>
  */
 public record TcpPose(double x, double y, double z,
 		double alpha, double beta, double gamma) {
@@ -18,6 +20,19 @@ public record TcpPose(double x, double y, double z,
 				Math.toRadians(alpha),
 				Math.toRadians(beta),
 				Math.toRadians(gamma)
+		};
+	}
+
+	/** Builds R = Rz(alpha) * Ry(beta) * Rx(gamma), the inverse of {@link #fromMatrix}'s ZYX extraction. */
+	public double[][] toRotationMatrix() {
+		double a = Math.toRadians(alpha), b = Math.toRadians(beta), g = Math.toRadians(gamma);
+		double ca = Math.cos(a), sa = Math.sin(a);
+		double cb = Math.cos(b), sb = Math.sin(b);
+		double cg = Math.cos(g), sg = Math.sin(g);
+		return new double[][] {
+			{ ca * cb,  -sa * cg + ca * sb * sg,   sa * sg + ca * sb * cg },
+			{ sa * cb,   ca * cg + sa * sb * sg,  -ca * sg + sa * sb * cg },
+			{ -sb,       cb * sg,                  cb * cg                }
 		};
 	}
 

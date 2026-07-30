@@ -53,7 +53,7 @@ public final class IKSolver {
 		double[] q = seedAngles.clone();
 		double[] tgt = target.toArray(); // {x, y, z, alphaRad, betaRad, gammaRad}
 
-		double[][] Rtgt = eulerZYXToMatrix(tgt[3], tgt[4], tgt[5]);
+		double[][] Rtgt = target.toRotationMatrix();
 
 		for (int iter = 0; iter < MAX_ITER; iter++) {
 			Transform4x4 curT = DHKinematics.forwardKinematics(params, q);
@@ -110,18 +110,6 @@ public final class IKSolver {
 			}
 		}
 		return q;
-	}
-
-	/** Builds R = Rz(alpha) * Ry(beta) * Rx(gamma), matching TcpPose.fromMatrix's ZYX extraction. */
-	private static double[][] eulerZYXToMatrix(double alpha, double beta, double gamma) {
-		double ca = Math.cos(alpha), sa = Math.sin(alpha);
-		double cb = Math.cos(beta),  sb = Math.sin(beta);
-		double cg = Math.cos(gamma), sg = Math.sin(gamma);
-		return new double[][] {
-			{ ca * cb,  -sa * cg + ca * sb * sg,   sa * sg + ca * sb * cg },
-			{ sa * cb,   ca * cg + sa * sb * sg,  -ca * sg + sa * sb * cg },
-			{ -sb,       cb * sg,                  cb * cg                }
-		};
 	}
 
 	private static double[][] multiply3(double[][] a, double[][] b) {
