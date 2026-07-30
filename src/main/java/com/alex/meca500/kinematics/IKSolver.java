@@ -53,22 +53,32 @@ public final class IKSolver {
 		double[] q = seedAngles.clone();
 		double[] tgt = target.toArray(); // {x, y, z, alphaRad, betaRad, gammaRad}
 
+		double[][] Rtgt = eulerZYXToMatrix(tgt[3], tgt[4], tgt[5]);
+
 		for (int iter = 0; iter < MAX_ITER; iter++) {
-			TcpPose cur = DHKinematics.computeTcpPose(params, q);
-			double[] curArr = cur.toArray();
+			Transform4x4 curT = DHKinematics.forwardKinematics(params, q);
+			double[] curPos = curT.getPosition();
+			double[][] Rcur = curT.getRotation();
+
+			// Orientation error via rotation matrices, not Euler angles: Euler-angle
+			// subtraction is discontinuous near gimbal lock (beta = ±90°) and doesn't
+			// match the angular-velocity meaning of the Jacobian's rows 3-5, which was
+			// causing huge, unpredictable joint jumps for small TCP pose changes.
+			double[][] Rerr = multiply3(Rtgt, transpose3(Rcur));
+			double[] oriRaw = veeSkewSymmetric(Rerr); // ~ rad, exact for small angles
 
 			// 6D pose error — orientation components scaled to mm units
 			double[] e = new double[6];
-			e[0] = tgt[0] - curArr[0];
-			e[1] = tgt[1] - curArr[1];
-			e[2] = tgt[2] - curArr[2];
-			e[3] = wrapAngle(tgt[3] - curArr[3]) * ORI_SCALE;
-			e[4] = wrapAngle(tgt[4] - curArr[4]) * ORI_SCALE;
-			e[5] = wrapAngle(tgt[5] - curArr[5]) * ORI_SCALE;
+			e[0] = tgt[0] - curPos[0];
+			e[1] = tgt[1] - curPos[1];
+			e[2] = tgt[2] - curPos[2];
+			e[3] = oriRaw[0] * ORI_SCALE;
+			e[4] = oriRaw[1] * ORI_SCALE;
+			e[5] = oriRaw[2] * ORI_SCALE;
 
 			double posErr = norm3(e[0], e[1], e[2]);
-			double oriErr = norm3(e[3], e[4], e[5]);
-			if (posErr < POS_TOL && oriErr < ORI_TOL * ORI_SCALE) break;
+			double oriErr = norm3(oriRaw[0], oriRaw[1], oriRaw[2]);
+			if (posErr < POS_TOL && oriErr < ORI_TOL) break;
 
 			double[][] J = DHKinematics.jacobian(params, q);
 
@@ -102,10 +112,42 @@ public final class IKSolver {
 		return q;
 	}
 
-	private static double wrapAngle(double a) {
-		while (a >  Math.PI) a -= 2 * Math.PI;
-		while (a < -Math.PI) a += 2 * Math.PI;
-		return a;
+	/** Builds R = Rz(alpha) * Ry(beta) * Rx(gamma), matching TcpPose.fromMatrix's ZYX extraction. */
+	private static double[][] eulerZYXToMatrix(double alpha, double beta, double gamma) {
+		double ca = Math.cos(alpha), sa = Math.sin(alpha);
+		double cb = Math.cos(beta),  sb = Math.sin(beta);
+		double cg = Math.cos(gamma), sg = Math.sin(gamma);
+		return new double[][] {
+			{ ca * cb,  -sa * cg + ca * sb * sg,   sa * sg + ca * sb * cg },
+			{ sa * cb,   ca * cg + sa * sb * sg,  -ca * sg + sa * sb * cg },
+			{ -sb,       cb * sg,                  cb * cg                }
+		};
+	}
+
+	private static double[][] multiply3(double[][] a, double[][] b) {
+		double[][] r = new double[3][3];
+		for (int i = 0; i < 3; i++)
+			for (int j = 0; j < 3; j++)
+				for (int k = 0; k < 3; k++)
+					r[i][j] += a[i][k] * b[k][j];
+		return r;
+	}
+
+	private static double[][] transpose3(double[][] a) {
+		double[][] r = new double[3][3];
+		for (int i = 0; i < 3; i++)
+			for (int j = 0; j < 3; j++)
+				r[i][j] = a[j][i];
+		return r;
+	}
+
+	/** Vee-map of the skew-symmetric part of R: [R21-R12, R02-R20, R10-R01] / 2. */
+	private static double[] veeSkewSymmetric(double[][] r) {
+		return new double[] {
+			(r[2][1] - r[1][2]) / 2.0,
+			(r[0][2] - r[2][0]) / 2.0,
+			(r[1][0] - r[0][1]) / 2.0
+		};
 	}
 
 	private static double norm3(double a, double b, double c) {
