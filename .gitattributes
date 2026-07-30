@@ -1,0 +1,24 @@
+# Normalize all text files to LF, both in the repository and on checkout,
+# so local (Windows/Eclipse) working copies and GitHub always agree.
+* text=auto eol=lf
+
+*.java        text eol=lf
+*.xml         text eol=lf
+*.md          text eol=lf
+*.txt         text eol=lf
+*.py          text eol=lf
+*.properties  text eol=lf
+*.prefs       text eol=lf
+.classpath    text eol=lf
+.project      text eol=lf
+.gitignore    text eol=lf
+.gitattributes text eol=lf
+LICENSE       text eol=lf
+
+# Binary / CAD / image assets -- never touch these
+*.stl binary
+*.stp binary
+*.ico binary
+*.png binary
+*.jpg binary
+*.jar binary
