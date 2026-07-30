@@ -9,4 +9,5 @@ package com.alex.meca500.kinematics;
  * @param d           link offset (mm)
  * @param thetaOffset constant added to the joint variable (radians), usually 0
  */
-public record DHParameter(double a, double alpha, double d, double thetaOffset) {}
+public record DHParameter(double a, double alpha, double d, double thetaOffset) {
+}

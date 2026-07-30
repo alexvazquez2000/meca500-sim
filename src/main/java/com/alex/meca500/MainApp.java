@@ -220,12 +220,12 @@ public class MainApp {
 
 		private TcpPose readTcpFromSliders() {
 			return new TcpPose(
-				tcpSliders[0].getValue(), tcpSliders[1].getValue(), tcpSliders[2].getValue(),
-				tcpSliders[3].getValue(), tcpSliders[4].getValue(), tcpSliders[5].getValue());
+					tcpSliders[0].getValue(), tcpSliders[1].getValue(), tcpSliders[2].getValue(),
+					tcpSliders[3].getValue(), tcpSliders[4].getValue(), tcpSliders[5].getValue());
 		}
 
 		private static Slider makeSlider(double min, double max, double val,
-		                                  double majorTick, int minorCount) {
+				double majorTick, int minorCount) {
 			Slider s = new Slider(min, max, val);
 			s.setShowTickMarks(true);
 			s.setShowTickLabels(true);
@@ -268,4 +268,5 @@ public class MainApp {
 					name, minX, maxX, minY, maxY, minZ, maxZ);
 		}
 	}
+
 }
