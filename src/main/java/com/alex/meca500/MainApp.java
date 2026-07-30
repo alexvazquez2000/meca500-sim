@@ -1,12 +1,25 @@
 package com.alex.meca500;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.concurrent.Executors;
+
+import com.sun.net.httpserver.HttpServer;
+
+import com.alex.meca500.api.RestApiServer;
+import com.alex.meca500.api.RobotController;
 import com.alex.meca500.kinematics.DHKinematics;
 import com.alex.meca500.kinematics.IKSolver;
 import com.alex.meca500.kinematics.TcpPose;
 
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
@@ -14,7 +27,10 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.MeshView;
 import javafx.scene.shape.TriangleMesh;
 import javafx.scene.transform.Rotate;
@@ -46,8 +62,29 @@ public class MainApp {
 		// Guards against FK→TCP→IK→joint feedback loops
 		private boolean updatingFromCode = false;
 
+		private HttpServer httpServer;
+		private RobotController controller;
+		private RestApiServer restApiServer;
+		private Circle statusDot;
+		private Label statusLabel;
+
 		@Override
 		public void start(Stage stage) {
+
+			// Fail fast if another instance is already running: try to claim the
+			// fixed control port before building any of the 3D scene.
+			try {
+				httpServer = HttpServer.create(new InetSocketAddress(8500), 0);
+			} catch (IOException e) {
+				new Alert(AlertType.ERROR,
+						"Port 8500 is already in use -- another instance of the Meca500 "
+						+ "simulator may already be running. Close it and try again.",
+						ButtonType.OK).showAndWait();
+				Platform.exit();
+				System.exit(1);
+				return;
+			}
+			httpServer.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
 
 			Group world = new Group();
 			// STLs are in STEP assembly frame (Y-up). Flip to JavaFX Y-down.
@@ -86,7 +123,17 @@ public class MainApp {
 			Pane subSceneWrapper = new Pane(subScene);
 			subScene.widthProperty().bind(subSceneWrapper.widthProperty());
 			subScene.heightProperty().bind(subSceneWrapper.heightProperty());
-			VBox.setVgrow(subSceneWrapper, Priority.ALWAYS);
+
+			statusDot = new Circle(6, Color.GRAY);
+			statusLabel = new Label("Disconnected");
+			HBox statusIndicator = new HBox(6, statusDot, statusLabel);
+			statusIndicator.setAlignment(Pos.CENTER_RIGHT);
+			statusIndicator.setPadding(new Insets(10));
+			statusIndicator.setMouseTransparent(true);
+
+			StackPane overlay = new StackPane(subSceneWrapper, statusIndicator);
+			StackPane.setAlignment(statusIndicator, Pos.TOP_RIGHT);
+			VBox.setVgrow(overlay, Priority.ALWAYS);
 
 			VBox jointCol = buildJointColumn();
 			VBox tcpCol    = buildTcpColumn();
@@ -102,15 +149,26 @@ public class MainApp {
 			applyTcpPoseToSliders(initPose);
 			updatingFromCode = false;
 
-			VBox root = new VBox(subSceneWrapper, bottomPanel);
+			VBox root = new VBox(overlay, bottomPanel);
 			Scene scene = new Scene(root, 900, 800);
 
 			stage.setTitle("Meca500 Simulator");
 			for (String iconRes : new String[] {"/meca500-16.png", "/meca500-32.png", "/meca500-48.png", "/meca500-128.png", "/meca500-256.png"}) {
 				stage.getIcons().add(new Image(getClass().getResourceAsStream(iconRes)));
 			}
+
+			controller = new RobotController(robot, this::applyJointFrame, this::updateConnectionIndicator);
+			restApiServer = new RestApiServer(httpServer, controller);
+			restApiServer.registerRoutes();
+			httpServer.start();
+
 			stage.setScene(scene);
 			stage.show();
+		}
+
+		@Override
+		public void stop() {
+			if (httpServer != null) httpServer.stop(0);
 		}
 
 		// ------------------------------------------------------------------ //
@@ -180,19 +238,7 @@ public class MainApp {
 								robot.getDHParameters(), target,
 								robot.getJointAngles(),
 								robot.getJointMin(), robot.getJointMax());
-
-						updatingFromCode = true;
-						for (int j = 0; j < 6; j++) {
-							double deg = Math.toDegrees(newAngles[j]);
-							robot.setJointAngle(j, newAngles[j]);
-							jointSliders[j].setValue(deg);
-							jointFields[j].setText(String.format("%.0f", deg));
-						}
-						// Snap TCP sliders to the achievable pose after IK
-						TcpPose achieved = DHKinematics.computeTcpPose(
-								robot.getDHParameters(), robot.getJointAngles());
-						applyTcpPoseToSliders(achieved);
-						updatingFromCode = false;
+						applyJointFrame(newAngles);
 					}
 				});
 
@@ -208,6 +254,31 @@ public class MainApp {
 		// ------------------------------------------------------------------ //
 		//  Helpers                                                             //
 		// ------------------------------------------------------------------ //
+
+		/**
+		 * Applies a full set of joint angles (radians) to the robot and both slider
+		 * columns, the same way a manual TCP-slider drag does. Used by the TCP-slider
+		 * IK listener and by the REST-driven motion animator so both paths stay in
+		 * sync. Must only be called on the JavaFX Application Thread.
+		 */
+		public void applyJointFrame(double[] anglesRad) {
+			updatingFromCode = true;
+			for (int j = 0; j < 6; j++) {
+				double deg = Math.toDegrees(anglesRad[j]);
+				robot.setJointAngle(j, anglesRad[j]);
+				jointSliders[j].setValue(deg);
+				jointFields[j].setText(String.format("%.0f", deg));
+			}
+			TcpPose achieved = DHKinematics.computeTcpPose(robot.getDHParameters(), robot.getJointAngles());
+			applyTcpPoseToSliders(achieved);
+			updatingFromCode = false;
+		}
+
+		/** Updates the top-right connection indicator. Must only be called on the JavaFX Application Thread. */
+		public void updateConnectionIndicator(boolean isConnected) {
+			statusDot.setFill(isConnected ? Color.LIMEGREEN : Color.GRAY);
+			statusLabel.setText(isConnected ? "Connected" : "Disconnected");
+		}
 
 		private void applyTcpPoseToSliders(TcpPose p) {
 			double[] vals = { p.x(), p.y(), p.z(), p.alpha(), p.beta(), p.gamma() };
