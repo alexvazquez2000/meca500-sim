@@ -1,0 +1,46 @@
+from PIL import Image
+  im = Image.open("src/main/resources/meca500.ico")
+  print(im.info)
+  print(im.size)
+  sizes = im.info.get('sizes')
+  print(sizes)
+  EOF)
+{'sizes': {(16, 16), (96, 96), (32, 32), (64, 64), (128, 128), (48, 48), (256, 256), (24, 24)}}
+(256, 256)
+{(16, 16), (96, 96), (32, 32), (64, 64), (128, 128), (48, 48), (256, 256), (24, 24)}
+
+● Bash(python - <<'EOF'
+  from PIL import Image
+  im = Image.open("src/main/resources/meca500.ico")
+  for size in [(16,16),(32,32),(48,48),(128,128),(256,256)]:
+      Image.open("src/main/resources/meca500.ico")
+      frame = Image.open("src/main/resources/meca500.ico")
+      frame.size  # noop
+      img = Image.open("src/main/resources/meca500.ico")
+      img_sized = img.copy()
+      img_sized.size
+      # Pillow lets you select a specific ico frame by reopening with size hint
+      img2 = Image.open("src/main/resources/meca500.ico")
+      img2.load()
+      out = Image.open("src/main/resources/meca500.ico")
+      out = out.resize(size) if out.size != size else out
+      fname = f"src/main/resources/meca500-{size[0]}.png"
+      # Better: use ico's built-in per-size loading via 'size' kwarg on load
+      real = Image.open("src/main/resources/meca500.ico")
+      real.load()
+      frame_at_size = None
+      try:
+          real2 = Image.open("src/main/resources/meca500.ico")
+          real2.size = size
+          real2.load()
+          frame_at_size = real2
+      except Exception as e:
+          frame_at_size = out
+      frame_at_size.save(fname, format="PNG")
+      print(fname, frame_at_size.size, frame_at_size.mode)
+  EOF)
+src/main/resources/meca500-16.png (16, 16) RGBA
+src/main/resources/meca500-32.png (32, 32) RGBA
+src/main/resources/meca500-48.png (48, 48) RGBA
+src/main/resources/meca500-128.png (128, 128) RGBA
+src/main/resources/meca500-256.png (256, 256) RGBA
